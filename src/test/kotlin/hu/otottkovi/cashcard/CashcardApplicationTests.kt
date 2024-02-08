@@ -23,7 +23,21 @@ class CashcardApplicationTests {
 		assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
 		val jsonContext:DocumentContext = JsonPath.parse(response.body)
 		val id:Number = jsonContext.read("\$.id")
-		assertThat(id).isNotNull
+		assertThat(id).isEqualTo(99)
+		val amount:Double = jsonContext.read("\$.amount")
+		assertThat(amount).isEqualTo(123.45)
+	}
+
+	@Test
+	fun shouldNotReturnACashCardWithAnUnknownId(){
+		val response = testRestTemplate.getForEntity<String>("/cashcard/1000")
+		assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+		assertThat(response.body).isBlank()
+	}
+
+	@Test
+	fun shouldReturnACashCardWhenDataIsSaved(){
+
 	}
 
 }
