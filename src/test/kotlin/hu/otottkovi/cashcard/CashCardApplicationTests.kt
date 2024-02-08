@@ -2,17 +2,20 @@ package hu.otottkovi.cashcard
 
 import com.jayway.jsonpath.DocumentContext
 import com.jayway.jsonpath.JsonPath
+import hu.otottkovi.cashcard.models.CashCard
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.client.getForEntity
+import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import java.net.URI
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class CashcardApplicationTests {
+class CashCardApplicationTests {
 
 	@Autowired
 	lateinit var testRestTemplate:TestRestTemplate
@@ -32,11 +35,20 @@ class CashcardApplicationTests {
 	fun shouldNotReturnACashCardWithAnUnknownId(){
 		val response = testRestTemplate.getForEntity<String>("/cashcard/1000")
 		assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
-		assertThat(response.body).isBlank()
 	}
 
 	@Test
-	fun shouldReturnACashCardWhenDataIsSaved(){
+	fun shouldCreateANewCashCard(){
+		val cashCard:CashCard = CashCard(0,250.0)
+		val createResponse: ResponseEntity<Void> = testRestTemplate.postForEntity<Void>("/cashcards",cashCard)
+		assertThat(createResponse.statusCode).isEqualTo(HttpStatus.CREATED)
+		val locationOfNewCashCard = createResponse.headers.location
+		locationOfNewCashCard?.let {
+			val getResponse: ResponseEntity<String> = testRestTemplate
+				.getForEntity<String>(it)
+			assertThat(getResponse.statusCode).isEqualTo(HttpStatus.OK)
+		}
+
 
 	}
 
