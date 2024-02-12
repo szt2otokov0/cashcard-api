@@ -2,6 +2,10 @@ package hu.otottkovi.cashcard.controllers
 
 import hu.otottkovi.cashcard.models.CashCard
 import hu.otottkovi.cashcard.repositories.CashCardRepository
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -15,6 +19,13 @@ import java.net.URI
 @RestController
 @RequestMapping("/cashcards")
 class CashCardController(val repo:CashCardRepository) {
+
+    @GetMapping
+    fun findAll(pageable:Pageable):ResponseEntity<List<CashCard>>{
+        val page: Page<CashCard> = repo.findAll(PageRequest.of(pageable.pageNumber,pageable.pageSize,
+            pageable.getSortOr(Sort.by(Sort.Direction.DESC,"amount"))))
+        return ResponseEntity.ok(page.content)
+    }
 
     @GetMapping("/{requestedId}")
     fun findById(@PathVariable requestedId: Long):ResponseEntity<CashCard> {

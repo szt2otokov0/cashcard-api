@@ -39,7 +39,7 @@ class CashCardApplicationTests {
 
 	@Test
 	fun shouldCreateANewCashCard(){
-		val cashCard:CashCard = CashCard(0,250.0)
+		val cashCard:CashCard = CashCard(44,250.0)
 		val createResponse: ResponseEntity<Void> = testRestTemplate.postForEntity<Void>("/cashcards",cashCard)
 		assertThat(createResponse.statusCode).isEqualTo(HttpStatus.CREATED)
 		val locationOfNewCashCard = createResponse.headers.location
@@ -48,7 +48,11 @@ class CashCardApplicationTests {
 				.getForEntity<String>(it)
 			assertThat(getResponse.statusCode).isEqualTo(HttpStatus.OK)
 		}
-
+		val documentContext:DocumentContext = JsonPath.parse(createResponse.body)
+		val id:Number = documentContext.read("\$.id")
+		val amount:Double = documentContext.read("\$.amount")
+		assertThat(id).isNotNull()
+		assertThat(amount).isEqualTo(250.0)
 
 	}
 
