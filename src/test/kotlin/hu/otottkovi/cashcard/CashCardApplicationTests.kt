@@ -3,6 +3,7 @@ package hu.otottkovi.cashcard
 import com.jayway.jsonpath.DocumentContext
 import com.jayway.jsonpath.JsonPath
 import hu.otottkovi.cashcard.models.CashCard
+import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,9 +13,10 @@ import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import java.net.URI
+import org.springframework.test.annotation.DirtiesContext
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class CashCardApplicationTests {
 
 	@Autowired
@@ -38,6 +40,7 @@ class CashCardApplicationTests {
 	}
 
 	@Test
+	@DirtiesContext
 	fun shouldCreateANewCashCard(){
 		val cashCard:CashCard = CashCard(44,250.0)
 		val createResponse: ResponseEntity<Void> = testRestTemplate.postForEntity<Void>("/cashcards",cashCard)
@@ -54,6 +57,19 @@ class CashCardApplicationTests {
 		assertThat(id).isNotNull()
 		assertThat(amount).isEqualTo(250.0)
 
+	}
+
+	@Test
+	fun shouldReturnAllCashCardsWhenListIsRequested(){
+		val response = testRestTemplate.getForEntity<String>("/cashcards")
+		assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+		val jsonContext: DocumentContext = JsonPath.parse(response.body)
+		val cashCardCount: Int = jsonContext.read("\$.length()")
+		assertThat(cashCardCount).isEqualTo(3)
+		val ids: JSONArray = jsonContext.read("\$..id")
+		assertThat(ids).containsExactlyInAnyOrder(99,100,101)
+		val amounts: JSONArray = jsonContext.read("\$..id")
+		assertThat(amounts).containsExactlyInAnyOrder(123.45,100.0,150.0)
 	}
 
 }
