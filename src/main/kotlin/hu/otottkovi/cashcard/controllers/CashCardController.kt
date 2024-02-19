@@ -22,8 +22,7 @@ class CashCardController(val repo:CashCardRepository) {
 
     @GetMapping
     fun findAll(pageable:Pageable):ResponseEntity<List<CashCard>>{
-        val page: Page<CashCard> = repo.findAll(PageRequest.of(pageable.pageNumber,pageable.pageSize,
-            pageable.getSortOr(Sort.by(Sort.Direction.DESC,"amount"))))
+        val page: Page<CashCard> = repo.findAll(PageRequest.of(pageable.pageNumber,pageable.pageSize,pageable.sort))
         return ResponseEntity.ok(page.content)
     }
 

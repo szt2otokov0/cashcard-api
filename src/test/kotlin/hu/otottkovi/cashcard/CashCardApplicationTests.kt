@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.annotation.DirtiesContext
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class CashCardApplicationTests {
 
 	@Autowired
@@ -68,8 +67,18 @@ class CashCardApplicationTests {
 		assertThat(cashCardCount).isEqualTo(3)
 		val ids: JSONArray = jsonContext.read("\$..id")
 		assertThat(ids).containsExactlyInAnyOrder(99,100,101)
-		val amounts: JSONArray = jsonContext.read("\$..id")
-		assertThat(amounts).containsExactlyInAnyOrder(123.45,100.0,150.0)
+		val amounts: JSONArray = jsonContext.read("\$..amount")
+		assertThat(amounts).containsExactlyInAnyOrder(123.45,1.0,150.0)
+	}
+
+	@Test
+	fun shouldReturnAPageOfCashCards(){
+		val response:ResponseEntity<String> = testRestTemplate.getForEntity<String>("/cashcards?page=0?size=1")
+		assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+
+		val jsonContext:DocumentContext = JsonPath.parse(response.body)
+		val page:JSONArray = jsonContext.read("\$[*]")
+		assertThat(page.size).isEqualTo(1)
 	}
 
 }
