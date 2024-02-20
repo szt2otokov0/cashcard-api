@@ -73,12 +73,31 @@ class CashCardApplicationTests {
 
 	@Test
 	fun shouldReturnAPageOfCashCards(){
-		val response:ResponseEntity<String> = testRestTemplate.getForEntity<String>("/cashcards?page=0?size=1")
+		val response:ResponseEntity<String> = testRestTemplate.getForEntity<String>(
+			"/cashcards?page=0&size=1&sort=amount,desc")
 		assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
 
 		val jsonContext:DocumentContext = JsonPath.parse(response.body)
 		val page:JSONArray = jsonContext.read("\$[*]")
 		assertThat(page.size).isEqualTo(1)
+
+		val amount:Double = jsonContext.read("\$[0].amount")
+		assertThat(amount).isEqualTo(150.0)
 	}
+
+	@Test
+	fun shouldReturnASortedPageOfCashCardsWithNoParametersAndUseDefaultValues(){
+		val response:ResponseEntity<String> = testRestTemplate.getForEntity<String>("/cashcards")
+		assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+
+		val jsonContext:DocumentContext = JsonPath.parse(response.body)
+		val page:JSONArray = jsonContext.read("\$[*]")
+		assertThat(page.size).isEqualTo(3)
+
+		val amounts: JSONArray = jsonContext.read("\$..amount")
+		assertThat(amounts).containsExactly(1.0,123.45,150.0)
+	}
+
+
 
 }
