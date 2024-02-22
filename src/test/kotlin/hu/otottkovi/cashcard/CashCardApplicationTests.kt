@@ -43,8 +43,9 @@ class CashCardApplicationTests {
 	@Test
 	@DirtiesContext
 	fun shouldCreateANewCashCard(){
-		val cashCard = CashCard(44,250.0,100)
-		val createResponse: ResponseEntity<Void> = testRestTemplate.withBasicAuth("Tomika","password").postForEntity<Void>("/cashcards",cashCard)
+		val cashCard = CashCard(44,250.0,-1)
+		val createResponse: ResponseEntity<Void> = testRestTemplate.withBasicAuth("Tomika","password")
+			.postForEntity<Void>("/cashcards",cashCard)
 		assertThat(createResponse.statusCode).isEqualTo(HttpStatus.CREATED)
 		val locationOfNewCashCard = createResponse.headers.location
 		locationOfNewCashCard?.let {
@@ -111,5 +112,19 @@ class CashCardApplicationTests {
 		response = testRestTemplate.withBasicAuth("Tomika","bad pw")
 			.getForEntity<String>("/cashcards/99")
 		assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+	}
+
+	@Test
+	fun shouldRejectNotCardOwners(){
+		val response: ResponseEntity<String> = testRestTemplate.withBasicAuth("not a card owner","qwerty")
+			.getForEntity<String>("/cashcards/99")
+		assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+	}
+
+	@Test
+	fun shouldNotAllowAccessToCashCardsTheyDoNotOwn(){
+		val response: ResponseEntity<String> = testRestTemplate.withBasicAuth("Tomika","password")
+			.getForEntity<String>("/cashcards/102")
+		assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
 	}
 }

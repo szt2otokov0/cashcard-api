@@ -15,21 +15,32 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
+import java.security.Principal
+import java.util.Optional
 
 @RestController
 @RequestMapping("/cashcards")
 class CashCardController(val repo:CashCardRepository) {
 
+    private val principalIds = mapOf<String,Long>("Tomika" to 100,"Patrick" to 101, "not a card owner" to 999)
+
     @GetMapping
-    fun findAll(pageable:Pageable):ResponseEntity<List<CashCard>>{
-        val page: Page<CashCard> = repo.findAll(PageRequest.of(pageable.pageNumber,pageable.pageSize,
-            pageable.getSortOr(Sort.by(Sort.Direction.ASC,"amount"))))
+    fun findAll(pageable: Pageable, principal: Principal): ResponseEntity<List<CashCard>>{
+        val page: Page<CashCard> = repo.findByOwnerId(
+            principalIds.getOrDefault(principal.name,0),
+            PageRequest.of(
+                pageable.pageNumber, pageable.pageSize,
+                pageable.getSortOr(Sort.by(Sort.Direction.ASC, "amount"))
+            )
+        )
         return ResponseEntity.ok(page.content)
     }
 
     @GetMapping("/{requestedId}")
-    fun findById(@PathVariable requestedId: Long):ResponseEntity<CashCard> {
-        val optionalCard = repo.findById(requestedId)
+    fun findById(@PathVariable requestedId: Long,principal: Principal):ResponseEntity<CashCard> {
+        val ownerId = principalIds
+            .getOrDefault(principal.name, 0)
+        val optionalCard = Optional.ofNullable(repo.findByIdAndOwnerId(requestedId, ownerId))
         return if(optionalCard.isPresent) {
             val card: CashCard = optionalCard.get()
             ResponseEntity.ok(card)

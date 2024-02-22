@@ -18,7 +18,7 @@ class SecurityConfig {
     fun filterChain(http:HttpSecurity):SecurityFilterChain{
         http.authorizeHttpRequests {
             it.requestMatchers("/cashcards/**")
-                .authenticated()
+                .hasRole("CARD-OWNER")
         }.csrf{
                 it.disable()
         }.httpBasic(Customizer.withDefaults())
@@ -30,9 +30,17 @@ class SecurityConfig {
         val users = User.builder()
         val me = users.username("Tomika")
             .password(passwordEncoder.encode("password"))
-            .roles()
+            .roles("CARD-OWNER")
             .build()
-        return InMemoryUserDetailsManager(me)
+        val poorMan = users.username("not a card owner")
+            .password(passwordEncoder.encode("qwerty"))
+            .roles("NON-OWNER")
+            .build()
+        val another = users.username("Patrick")
+            .password(passwordEncoder.encode("20041209"))
+            .roles("CARD-OWNER")
+            .build()
+        return InMemoryUserDetailsManager(me,poorMan,another)
     }
 
     @Bean
