@@ -23,7 +23,8 @@ class CashCardApplicationTests {
 
 	@Test
 	fun shouldReturnACashCard(){
-		val response: ResponseEntity<String> = testRestTemplate.getForEntity<String>("/cashcards/99")
+		val response: ResponseEntity<String> = testRestTemplate.withBasicAuth("Tomika","password")
+			.getForEntity<String>("/cashcards/99")
 		assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
 		val jsonContext:DocumentContext = JsonPath.parse(response.body)
 		val id:Number = jsonContext.read("\$.id")
@@ -34,15 +35,16 @@ class CashCardApplicationTests {
 
 	@Test
 	fun shouldNotReturnACashCardWithAnUnknownId(){
-		val response = testRestTemplate.getForEntity<String>("/cashcard/1000")
+		val response = testRestTemplate.withBasicAuth("Tomika","password")
+			.getForEntity<String>("/cashcard/1000")
 		assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
 	}
 
 	@Test
 	@DirtiesContext
 	fun shouldCreateANewCashCard(){
-		val cashCard:CashCard = CashCard(44,250.0)
-		val createResponse: ResponseEntity<Void> = testRestTemplate.postForEntity<Void>("/cashcards",cashCard)
+		val cashCard = CashCard(44,250.0,100)
+		val createResponse: ResponseEntity<Void> = testRestTemplate.withBasicAuth("Tomika","password").postForEntity<Void>("/cashcards",cashCard)
 		assertThat(createResponse.statusCode).isEqualTo(HttpStatus.CREATED)
 		val locationOfNewCashCard = createResponse.headers.location
 		locationOfNewCashCard?.let {
@@ -60,7 +62,7 @@ class CashCardApplicationTests {
 
 	@Test
 	fun shouldReturnAllCashCardsWhenListIsRequested(){
-		val response = testRestTemplate.getForEntity<String>("/cashcards")
+		val response = testRestTemplate.withBasicAuth("Tomika","password").getForEntity<String>("/cashcards")
 		assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
 		val jsonContext: DocumentContext = JsonPath.parse(response.body)
 		val cashCardCount: Int = jsonContext.read("\$.length()")
@@ -73,7 +75,8 @@ class CashCardApplicationTests {
 
 	@Test
 	fun shouldReturnAPageOfCashCards(){
-		val response:ResponseEntity<String> = testRestTemplate.getForEntity<String>(
+		val response:ResponseEntity<String> = testRestTemplate.withBasicAuth("Tomika","password")
+			.getForEntity<String>(
 			"/cashcards?page=0&size=1&sort=amount,desc")
 		assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
 
@@ -87,7 +90,8 @@ class CashCardApplicationTests {
 
 	@Test
 	fun shouldReturnASortedPageOfCashCardsWithNoParametersAndUseDefaultValues(){
-		val response:ResponseEntity<String> = testRestTemplate.getForEntity<String>("/cashcards")
+		val response:ResponseEntity<String> = testRestTemplate.withBasicAuth("Tomika","password")
+			.getForEntity<String>("/cashcards")
 		assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
 
 		val jsonContext:DocumentContext = JsonPath.parse(response.body)
@@ -98,6 +102,14 @@ class CashCardApplicationTests {
 		assertThat(amounts).containsExactly(1.0,123.45,150.0)
 	}
 
+	@Test
+	fun shouldNotReturnACashCardWhenUsingBadCredentials(){
+		var response = testRestTemplate.withBasicAuth("Wrong user","password")
+			.getForEntity<String>("/cashcards/99")
+		assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
 
-
+		response = testRestTemplate.withBasicAuth("Tomika","bad pw")
+			.getForEntity<String>("/cashcards/99")
+		assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+	}
 }

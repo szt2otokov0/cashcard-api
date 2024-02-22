@@ -24,9 +24,9 @@ internal class CashCardJsonTest {
     @BeforeEach
     fun setUp() {
         cashCards = Arrays.array(
-            CashCard(99L, 123.45),
-            CashCard(100L, 1.00),
-            CashCard(101L, 150.00)
+            CashCard(99L, 123.45,100),
+            CashCard(100L, 1.00,100),
+            CashCard(101L, 150.00,100)
         )
     }
 
@@ -60,7 +60,7 @@ internal class CashCardJsonTest {
                 
                 """.trimIndent()
         assertThat(json!!.parse(expected))
-            .isEqualTo(CashCard(99L, 123.45))
+            .isEqualTo(CashCard(99L, 123.45,100))
         assertThat(json.parseObject(expected).id).isEqualTo(99)
         assertThat(json.parseObject(expected).amount).isEqualTo(123.45)
     }
