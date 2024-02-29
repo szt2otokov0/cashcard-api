@@ -69,9 +69,9 @@ internal class CashCardJsonTest {
     fun cashCardListDeserializationTest(){
         val expected = """
          [
-            { "id": 99, "amount": 123.45 },
-            { "id": 100, "amount": 1.00 },
-            { "id": 101, "amount": 150.00 }
+            { "id": 99, "amount": 123.45, "ownerId": 100 },
+            { "id": 100, "amount": 1.00, "ownerId": 101 },
+            { "id": 101, "amount": 150.00, "owner": 100 }
          ]
          """
         assertThat(jsonList!!.parse(expected)).isEqualTo(cashCards)

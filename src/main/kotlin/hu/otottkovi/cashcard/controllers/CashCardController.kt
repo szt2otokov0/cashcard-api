@@ -10,11 +10,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriComponentsBuilder
-import java.net.URI
 import java.security.Principal
 import java.util.Optional
 
@@ -48,12 +48,20 @@ class CashCardController(val repo:CashCardRepository) {
     }
 
     @PostMapping
-    fun createCashCard(@RequestBody newCashCard: CashCard, uriBuilder:UriComponentsBuilder):ResponseEntity<Void>{
-        val savedCashCard:CashCard = repo.save(newCashCard)
+    fun createCashCard(@RequestBody newCashCard: CashCard, uriBuilder:UriComponentsBuilder,principal: Principal
+    ):ResponseEntity<Void>{
+        val cashCardToSave = CashCard(newCashCard.id,newCashCard.amount,principalIds.getOrDefault(principal.name,
+            0))
+        val savedCashCard:CashCard = repo.save(cashCardToSave)
         val location = uriBuilder
             .path("cashcards/{id}")
             .buildAndExpand(savedCashCard.id)
             .toUri()
         return ResponseEntity.created(location).build()
+    }
+
+    @PutMapping("/{requestedId}")
+    fun updateCashCard(@PathVariable requestedId: Long,@RequestBody cardToUpdate:CashCard):ResponseEntity<Void>{
+
     }
 }

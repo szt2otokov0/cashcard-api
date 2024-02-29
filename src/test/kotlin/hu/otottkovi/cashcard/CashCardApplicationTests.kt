@@ -36,28 +36,28 @@ class CashCardApplicationTests {
 	@Test
 	fun shouldNotReturnACashCardWithAnUnknownId(){
 		val response = testRestTemplate.withBasicAuth("Tomika","password")
-			.getForEntity<String>("/cashcard/1000")
+			.getForEntity<String>("/cashcards/1000")
 		assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
 	}
 
 	@Test
 	@DirtiesContext
 	fun shouldCreateANewCashCard(){
-		val cashCard = CashCard(44,250.0,-1)
+		val cashCard = CashCard(null,250.0,null)
 		val createResponse: ResponseEntity<Void> = testRestTemplate.withBasicAuth("Tomika","password")
 			.postForEntity<Void>("/cashcards",cashCard)
 		assertThat(createResponse.statusCode).isEqualTo(HttpStatus.CREATED)
 		val locationOfNewCashCard = createResponse.headers.location
 		locationOfNewCashCard?.let {
-			val getResponse: ResponseEntity<String> = testRestTemplate
+			val getResponse: ResponseEntity<String> = testRestTemplate.withBasicAuth("Tomika", "password")
 				.getForEntity<String>(it)
 			assertThat(getResponse.statusCode).isEqualTo(HttpStatus.OK)
+			val documentContext:DocumentContext = JsonPath.parse(getResponse.body)
+			val id:Number = documentContext.read("\$.id")
+			val amount:Double = documentContext.read("\$.amount")
+			assertThat(id).isNotNull()
+			assertThat(amount).isEqualTo(250.0)
 		}
-		val documentContext:DocumentContext = JsonPath.parse(createResponse.body)
-		val id:Number = documentContext.read("\$.id")
-		val amount:Double = documentContext.read("\$.amount")
-		assertThat(id).isNotNull()
-		assertThat(amount).isEqualTo(250.0)
 
 	}
 
