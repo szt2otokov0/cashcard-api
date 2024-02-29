@@ -38,8 +38,7 @@ class CashCardController(val repo:CashCardRepository) {
 
     @GetMapping("/{requestedId}")
     fun findById(@PathVariable requestedId: Long,principal: Principal):ResponseEntity<CashCard> {
-        val ownerId = principalIds
-            .getOrDefault(principal.name, 0)
+        val ownerId = principalIds.getValue(principal.name)
         val optionalCard = Optional.ofNullable(repo.findByIdAndOwnerId(requestedId, ownerId))
         return if(optionalCard.isPresent) {
             val card: CashCard = optionalCard.get()
@@ -50,8 +49,7 @@ class CashCardController(val repo:CashCardRepository) {
     @PostMapping
     fun createCashCard(@RequestBody newCashCard: CashCard, uriBuilder:UriComponentsBuilder,principal: Principal
     ):ResponseEntity<Void>{
-        val cashCardToSave = CashCard(newCashCard.id,newCashCard.amount,principalIds.getOrDefault(principal.name,
-            0))
+        val cashCardToSave = CashCard(null,newCashCard.amount,principalIds.getValue(principal.name))
         val savedCashCard:CashCard = repo.save(cashCardToSave)
         val location = uriBuilder
             .path("cashcards/{id}")
@@ -61,7 +59,13 @@ class CashCardController(val repo:CashCardRepository) {
     }
 
     @PutMapping("/{requestedId}")
-    fun updateCashCard(@PathVariable requestedId: Long,@RequestBody cardToUpdate:CashCard):ResponseEntity<Void>{
-
+    fun updateCashCard(@PathVariable requestedId: Long,@RequestBody cardToUpdate:CashCard, principal: Principal
+    ):ResponseEntity<Void>{
+        val cashCard = repo.findByIdAndOwnerId(requestedId,principalIds.getValue(principal.name))
+        return if(cashCard != null) {
+            val newCashCard = CashCard(cashCard.id, cardToUpdate.amount, principalIds.getValue(principal.name))
+            repo.save(newCashCard)
+            ResponseEntity.noContent().build()
+        } else ResponseEntity.notFound().build()
     }
 }
